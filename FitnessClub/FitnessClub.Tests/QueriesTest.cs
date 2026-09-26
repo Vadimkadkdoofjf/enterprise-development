@@ -1,158 +1,147 @@
-﻿namespace FitnessClub.Tests;
+﻿using FitnessClub.Domain.Entities;
+
+namespace FitnessClub.Tests;
 
 /// <summary>
-/// Тесты запросов к данным фитнес-клуба.
+/// Тесты LINQ-запросов для предметной области фитнес-клуба.
 /// </summary>
-public class QueriesTest : IClassFixture<QueriesTestFixture>
+public class QueriesTest(QueriesTestFixture fixture) : IClassFixture<QueriesTestFixture>
 {
-    private readonly QueriesTestFixture _fixture;
-
-    /// <summary>
-    /// Создаёт экземпляр класса тестов.
-    /// </summary>
-    /// <param name="fixture">Набор тестовых данных.</param>
-    public QueriesTest(QueriesTestFixture fixture)
-    {
-        _fixture = fixture;
-    }
-
     /// <summary>
     /// Проверяет получение тренеров со стажем не менее пяти лет.
     /// </summary>
     [Fact]
-    public void GetExperiencedTrainers_ShouldReturnTrainersWithExperienceAtLeastFiveYears()
+    public void GetExperiencedTrainers_ShouldReturnExpectedTrainers()
     {
-        var trainers = _fixture.Trainers
-            .Where(trainer => trainer.WorkExperience >= 5)
+        const int minimumExperience = 5;
+
+        var expectedNames = new[]
+        {
+            "Алексеев Андрей Сергеевич",
+            "Васильев Дмитрий Олегович",
+            "Жуков Александр Михайлович",
+            "Захарова Екатерина Романовна",
+            "Ильин Роман Евгеньевич",
+            "Кузнецов Алексей Николаевич",
+            "Морозов Максим Викторович",
+            "Смирнов Сергей Андреевич"
+        };
+
+        var trainers = fixture.Trainers
+            .Where(trainer => trainer.WorkExperience >= minimumExperience)
             .OrderBy(trainer => trainer.FullName)
-            .ToList();
+            .Select(trainer => trainer.FullName)
+            .ToArray();
 
-        Assert.NotEmpty(trainers);
-
-        Assert.All(
-            trainers,
-            trainer => Assert.True(
-                trainer.WorkExperience >= 5));
+        Assert.Equal(expectedNames, trainers);
     }
 
     /// <summary>
-    /// Проверяет доступность выбранного зала в текущий момент.
+    /// Проверяет доступность зала в заданный момент времени.
     /// </summary>
-    [Fact]
-    public void IsHallAvailable_ShouldReturnCorrectAvailability()
+    /// <param name="hallId">Идентификатор зала.</param>
+    /// <param name="expectedAvailable">Ожидаемый признак доступности зала.</param>
+    [Theory]
+    [InlineData(1, false)]
+    [InlineData(2, true)]
+    public void IsHallAvailable_ShouldReturnExpectedResult(
+        int hallId,
+        bool expectedAvailable)
     {
-        var hall = _fixture.Halls.First();
+        var currentDateTime = fixture.TestDateTime;
 
-        var currentDateTime = DateTime.Now;
-
-        var isAvailable = !_fixture.Trainings
-            .Where(training => training.Hall.Id == hall.Id)
+        var isAvailable = !fixture.Trainings
+            .Where(training => training.Hall.Id == hallId)
             .Any(training =>
                 currentDateTime >= training.StartTime &&
                 currentDateTime <
-                training.StartTime.AddMinutes(
-                    training.DurationMinutes));
+                training.StartTime.AddMinutes(training.DurationMinutes));
 
-        Assert.True(isAvailable);
+        Assert.Equal(expectedAvailable, isAvailable);
     }
 
     /// <summary>
-    /// Проверяет получение клиентов с просроченным абонементом.
+    /// Проверяет получение клиентов с истёкшим абонементом.
     /// </summary>
     [Fact]
-    public void GetClientsWithExpiredSubscriptions_ShouldReturnSortedClients()
+    public void GetExpiredClients_ShouldReturnClientsSortedByFullName()
     {
-        var today = DateTime.Today;
+        var expectedNames = new[]
+        {
+            "Кузнецов Алексей Викторович",
+            "Морозов Максим Николаевич",
+            "Николаев Артём Дмитриевич",
+            "Попов Дмитрий Олегович",
+            "Сидорова Анна Сергеевна"
+        };
 
-        var clients = _fixture.Clients
-            .Where(client => client.EndDate < today)
+        var clients = fixture.Clients
+            .Where(client => client.SubscriptionEndDate < fixture.TestDateTime)
             .OrderBy(client => client.FullName)
-            .ToList();
-
-        Assert.NotEmpty(clients);
-
-        Assert.All(
-            clients,
-            client => Assert.True(
-                client.EndDate < today));
-
-        var sortedNames = clients
             .Select(client => client.FullName)
-            .OrderBy(name => name)
-            .ToList();
+            .ToArray();
 
-        Assert.Equal(
-            sortedNames,
-            clients.Select(client => client.FullName).ToList());
+        Assert.Equal(expectedNames, clients);
     }
 
     /// <summary>
-    /// Проверяет получение занятий за текущий месяц в выбранном зале.
+    /// Проверяет получение занятий текущего месяца в выбранном зале.
     /// </summary>
     [Fact]
-    public void GetTrainingsForCurrentMonthAndSelectedHall_ShouldReturnCorrectTrainings()
+    public void GetCurrentMonthTrainings_ShouldReturnTrainingsInSelectedHall()
     {
-        var selectedHall = _fixture.Halls.First();
-
-        var today = DateTime.Today;
+        const int selectedHallId = 1;
 
         var monthStart = new DateTime(
-            today.Year,
-            today.Month,
+            fixture.TestDateTime.Year,
+            fixture.TestDateTime.Month,
             1);
 
         var nextMonthStart = monthStart.AddMonths(1);
 
-        var trainings = _fixture.Trainings
+        var trainings = fixture.Trainings
             .Where(training =>
-                training.Hall.Id == selectedHall.Id &&
+                training.Hall.Id == selectedHallId &&
                 training.StartTime >= monthStart &&
                 training.StartTime < nextMonthStart)
             .OrderBy(training => training.StartTime)
             .ToList();
 
-        Assert.NotEmpty(trainings);
+        Assert.Equal(4, trainings.Count);
 
         Assert.All(
             trainings,
-            training =>
-            {
-                Assert.Equal(selectedHall.Id, training.Hall.Id);
-                Assert.True(training.StartTime >= monthStart);
-                Assert.True(training.StartTime < nextMonthStart);
-            });
+            training => Assert.Equal(selectedHallId, training.Hall.Id));
     }
 
     /// <summary>
     /// Проверяет получение пяти наиболее популярных тренеров.
     /// </summary>
     [Fact]
-    public void GetTopFivePopularTrainers_ShouldReturnFiveTrainers()
+    public void GetTopFiveTrainers_ShouldReturnExpectedTrainers()
     {
-        var topTrainers = _fixture.Trainers
-            .Select(trainer => new
+        var expectedNames = new[]
+        {
+            "Васильев Дмитрий Олегович",
+            "Алексеев Андрей Сергеевич",
+            "Жуков Александр Михайлович",
+            "Захарова Екатерина Романовна",
+            "Ильин Роман Евгеньевич"
+        };
+
+        var trainers = fixture.Trainings
+            .GroupBy(training => training.Trainer)
+            .Select(group => new
             {
-                Trainer = trainer,
-                TrainingCount = _fixture.Trainings.Count(
-                    training => training.Trainer.PassportNumber ==
-                                 trainer.PassportNumber)
+                Trainer = group.Key,
+                TrainingCount = group.Count()
             })
             .OrderByDescending(item => item.TrainingCount)
             .ThenBy(item => item.Trainer.FullName)
             .Take(5)
-            .ToList();
+            .Select(item => item.Trainer.FullName)
+            .ToArray();
 
-        Assert.Equal(5, topTrainers.Count);
-
-        Assert.All(
-            topTrainers,
-            item => Assert.NotNull(item.Trainer));
-
-        for (var index = 1; index < topTrainers.Count; index++)
-        {
-            Assert.True(
-                topTrainers[index - 1].TrainingCount >=
-                topTrainers[index].TrainingCount);
-        }
+        Assert.Equal(expectedNames, trainers);
     }
 }
