@@ -1,9 +1,11 @@
-﻿namespace FitnessClub.Domain.Entities;
+﻿using FitnessClub.Domain.Interfaces;
+
+namespace FitnessClub.Domain.Entities;
 
 /// <summary>
 /// Зал фитнес-клуба.
 /// </summary>
-public class Hall
+public class Hall : IEntity
 {
     /// <summary>
     /// ID зала.
@@ -17,7 +19,7 @@ public class Hall
     public required string Name { get; set; }
 
     /// <summary>
-    /// Вместимость(кол-во человек).
+    /// Вместимость зала в количестве человек.
     /// </summary>
     public int Capacity { get; set; }
 }

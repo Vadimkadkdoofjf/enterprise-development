@@ -1,9 +1,11 @@
-﻿namespace FitnessClub.Domain.Entities;
+﻿using FitnessClub.Domain.Interfaces;
+
+namespace FitnessClub.Domain.Entities;
 
 /// <summary>
 /// Запись клиента на персональное занятие с тренером.
 /// </summary>
-public class Training
+public class Training : IEntity
 {
     /// <summary>
     /// ID записи.

@@ -39,8 +39,10 @@ public class QueriesTest(QueriesTestFixture fixture) : IClassFixture<QueriesTest
     /// <summary>
     /// Проверяет доступность зала в заданный момент времени.
     /// </summary>
-    /// <param name="hallId">Идентификатор зала.</param>
-    /// <param name="expectedAvailable">Ожидаемый признак доступности зала.</param>
+    /// <param name="hallId">ID зала.</param>
+    /// <param name="expectedAvailable">
+    /// Ожидаемый признак доступности зала.
+    /// </param>
     [Theory]
     [InlineData(1, false)]
     [InlineData(2, true)]

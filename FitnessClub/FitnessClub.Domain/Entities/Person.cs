@@ -1,16 +1,17 @@
 ﻿using FitnessClub.Domain.Enums;
+using FitnessClub.Domain.Interfaces;
 
 namespace FitnessClub.Domain.Entities;
 
 /// <summary>
 /// Базовый класс для человека, являющегося участником фитнес-клуба.
 /// </summary>
-public abstract class Person
+public abstract class Person : IEntity
 {
     /// <summary>
-    /// ID человека.
-    /// </summary>
-    public int Id { get; set; }
+/// ID человека.
+/// </summary>
+public int Id { get; set; }
 
     /// <summary>
     /// Номер паспорта человека.
