@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FitnessClub.Infrastructure.EfCore.Configurations;
 
-/// <summary>Настройка таблицы и связей Specialization.</summary>
+/// <summary>Настройка таблицы и связей Specialization.
+/// </summary>
 public class SpecializationConfiguration : IEntityTypeConfiguration<Specialization>
 {
     public void Configure(EntityTypeBuilder<Specialization> builder)

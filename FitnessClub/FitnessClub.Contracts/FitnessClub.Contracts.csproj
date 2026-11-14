@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Validation\ValidDateAttribute.cs;Validation\DateNotBeforeAttribute.cs" />
+    <Compile Include="Validation\ValidDateAttribute.cs" />
+    <Compile Include="Validation\DateNotBeforeAttribute.cs" />
+  </ItemGroup>
+
 </Project>

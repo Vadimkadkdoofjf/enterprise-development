@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FitnessClub.Infrastructure.EfCore.Configurations;
 
-/// <summary>Настройка таблицы и связей Training.</summary>
+/// <summary>Настройка таблицы и связей Training.
+/// </summary>
 public class TrainingConfiguration : IEntityTypeConfiguration<Training>
 {
     public void Configure(EntityTypeBuilder<Training> builder)

@@ -14,7 +14,7 @@ public interface IRepository<TEntity>
     public Task<IReadOnlyCollection<TEntity>> GetAllAsync();
 
     /// <summary>
-    /// Получает сущность по IDу.
+    /// Получает сущность по ID.
     /// </summary>
     /// <param name="id">ID сущности.</param>
     /// <returns>Сущность или null, если она не найдена.</returns>
@@ -36,7 +36,7 @@ public interface IRepository<TEntity>
     public Task<bool> UpdateAsync(int id, TEntity entity);
 
     /// <summary>
-    /// Удаляет сущность по IDу.
+    /// Удаляет сущность по ID.
     /// </summary>
     /// <param name="id">ID удаляемой сущности.</param>
     /// <returns>true, если сущность найдена и удалена; иначе false.</returns>
