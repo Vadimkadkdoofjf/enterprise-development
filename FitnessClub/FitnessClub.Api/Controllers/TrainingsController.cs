@@ -24,7 +24,7 @@ public class TrainingsController(
         return Ok(await service.GetAllAsync());
     }
 
-    /// <summary>Возвращает запись по IDу.</summary>
+    /// <summary>Возвращает запись по ID.</summary>
     /// <param name="id">ID тренировки.</param>
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(TrainingDto), StatusCodes.Status200OK)]
