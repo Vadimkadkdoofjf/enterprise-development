@@ -3,7 +3,7 @@ using FitnessClub.Contracts.Dtos;
 
 namespace FitnessClub.Tests;
 
-/// <summary>Проверки входных данных.summary>
+/// <summary>Проверки входных данных.<summary>
 public class ClientValidationTests
 {
     [Theory]

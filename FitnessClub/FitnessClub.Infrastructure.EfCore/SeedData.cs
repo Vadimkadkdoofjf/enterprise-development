@@ -12,7 +12,7 @@ public static class SeedData
     /// <summary>
     /// Добавляет не менее десяти записей каждой сущности в модель миграции.
     /// </summary>
-    /// <param name="modelBuilder">Построитель модели EF Core.</param>
+    /// <param name="modelBuilder">Строит модель EF Core.</param>
     public static void Configure(ModelBuilder modelBuilder)
     {
         string[] specializationNames =

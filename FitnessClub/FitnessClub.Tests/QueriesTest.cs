@@ -3,7 +3,7 @@
 namespace FitnessClub.Tests;
 
 /// <summary>
-/// Тесты LINQ-запросов для предметной области фитнес-клуба.
+/// Тесты LINQ-запросов.
 /// </summary>
 public class QueriesTest(QueriesTestFixture fixture) : IClassFixture<QueriesTestFixture>
 {
