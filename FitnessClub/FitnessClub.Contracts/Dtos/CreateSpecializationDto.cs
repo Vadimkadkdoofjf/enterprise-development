@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace FitnessClub.Contracts.Dtos;
 
 /// <summary>
-/// Данные для создания.
+/// Данные для создания специализации тренера.
 /// </summary>
 public class CreateSpecializationDto
 {

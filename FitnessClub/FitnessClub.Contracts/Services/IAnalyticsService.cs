@@ -1,4 +1,4 @@
-﻿using FitnessClub.Contracts.Dtos;
+using FitnessClub.Contracts.Dtos;
 
 namespace FitnessClub.Contracts.Services;
 
@@ -28,7 +28,7 @@ public interface IAnalyticsService
     /// Возвращает тренировки выбранного зала за текущий календарный месяц.
     /// </summary>
     /// <param name="hallId">ID зала.</param>
-    public Task<IReadOnlyCollection<TrainingDto>> GetCurrentMonthTrainingsByHallAsync(
+    public Task<IReadOnlyCollection<TrainingDto>?> GetCurrentMonthTrainingsByHallAsync(
         int hallId);
 
     /// <summary>

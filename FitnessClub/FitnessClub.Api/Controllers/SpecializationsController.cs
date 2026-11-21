@@ -12,7 +12,6 @@ namespace FitnessClub.Api.Controllers;
 [ApiController]
 [Route("api/specializations")]
 [Produces("application/json")]
-[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
 public class SpecializationsController(
     ISpecializationService specializationService,
@@ -25,8 +24,17 @@ public class SpecializationsController(
     [ProducesResponseType(typeof(IReadOnlyCollection<SpecializationDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyCollection<SpecializationDto>>> GetAllAsync()
     {
-        var specializations = await specializationService.GetAllAsync();
-        return Ok(specializations);
+        try
+        {
+            var specializations = await specializationService.GetAllAsync();
+            return Ok(specializations);
+        }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -38,14 +46,23 @@ public class SpecializationsController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SpecializationDto>> GetById(int id)
     {
-        var specialization = await specializationService.GetByIdAsync(id);
-
-        if (specialization is null)
+        try
         {
-            return NotFound();
-        }
+            var specialization = await specializationService.GetByIdAsync(id);
 
-        return Ok(specialization);
+            if (specialization is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(specialization);
+        }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -53,6 +70,7 @@ public class SpecializationsController(
     /// </summary>
     /// <param name="dto">Данные новой специализации.</param>
     [HttpPost]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(SpecializationDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<SpecializationDto>> CreateAsync(
@@ -76,6 +94,12 @@ public class SpecializationsController(
             logger.LogWarning(exception, "Некорректные данные специализации.");
             return BadRequest(new { message = exception.Message });
         }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -84,6 +108,7 @@ public class SpecializationsController(
     /// <param name="id">ID специализации.</param>
     /// <param name="dto">Новые данные специализации.</param>
     [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -115,6 +140,12 @@ public class SpecializationsController(
 
             return BadRequest(new { message = exception.Message });
         }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -122,21 +153,31 @@ public class SpecializationsController(
     /// </summary>
     /// <param name="id">ID специализации.</param>
     [HttpDelete("{id:int}")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(int id)
     {
-        var deleted = await specializationService.DeleteAsync(id);
-
-        if (!deleted)
+        try
         {
-            return NotFound();
+            var deleted = await specializationService.DeleteAsync(id);
+
+            if (!deleted)
+            {
+                return NotFound();
+            }
+
+            logger.LogInformation(
+                "Удалена специализация с ID {SpecializationId}.",
+                id);
+
+            return NoContent();
         }
-
-        logger.LogInformation(
-            "Удалена специализация с ID {SpecializationId}.",
-            id);
-
-        return NoContent();
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 }

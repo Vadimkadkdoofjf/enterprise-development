@@ -8,6 +8,9 @@ namespace FitnessClub.Api;
 /// <summary>Преобразует конфликты данных в HTTP 409 без раскрытия деталей БД.</summary>
 public sealed class DatabaseExceptionHandler(ILogger<DatabaseExceptionHandler> logger) : IExceptionHandler
 {
+    /// <summary>Определяет ошибки сохранения, обрабатываемые централизованно.</summary>
+    public static bool IsDatabaseException(Exception exception) => exception is DbUpdateException;
+
     /// <inheritdoc />
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
@@ -24,7 +27,14 @@ public sealed class DatabaseExceptionHandler(ILogger<DatabaseExceptionHandler> l
 
         if (title is null)
         {
-            return false;
+            logger.LogError(exception, "Ошибка при запросе {Path}.", httpContext.Request.Path);
+            httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "Не удалось выполнить запрос."
+            }, cancellationToken);
+            return true;
         }
 
         logger.LogWarning(exception, "Конфликт данных при запросе {Path}.", httpContext.Request.Path);

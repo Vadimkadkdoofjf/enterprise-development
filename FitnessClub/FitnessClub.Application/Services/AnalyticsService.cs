@@ -40,8 +40,13 @@ public class AnalyticsService(IAnalyticsRepository analyticsRepository, IHallRep
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyCollection<TrainingDto>> GetCurrentMonthTrainingsByHallAsync(int hallId)
+    public async Task<IReadOnlyCollection<TrainingDto>?> GetCurrentMonthTrainingsByHallAsync(int hallId)
     {
+        if (await hallRepository.GetByIdAsync(hallId) is null)
+        {
+            return null;
+        }
+
         var today = DateTime.UtcNow.Date;
         var start = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var trainings = await analyticsRepository.GetHallTrainingsAsync(hallId, start, start.AddMonths(1));

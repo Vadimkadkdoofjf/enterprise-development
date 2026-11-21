@@ -7,13 +7,13 @@ namespace FitnessClub.Api.Controllers;
 /// <summary>
 /// Предоставляет HTTP-операции аналитики фитнес-клуба.
 /// </summary>
+/// <param name="logger">Журнал ошибок контроллера.</param>
 /// <param name="service">Сервис аналитики.</param>
 [ApiController]
 [Route("api/analytics")]
 [Produces("application/json")]
-[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-public class AnalyticsController(IAnalyticsService service) : ControllerBase
+public class AnalyticsController(IAnalyticsService service, ILogger<AnalyticsController> logger) : ControllerBase
 {
     /// <summary>
     /// Возвращает тренеров со стажем от пяти лет.
@@ -25,9 +25,18 @@ public class AnalyticsController(IAnalyticsService service) : ControllerBase
     public async Task<ActionResult<IReadOnlyCollection<TrainerDto>>>
         GetExperiencedTrainers()
     {
-        var trainers = await service.GetExperiencedTrainersAsync();
+        try
+        {
+            var trainers = await service.GetExperiencedTrainersAsync();
 
-        return Ok(trainers);
+            return Ok(trainers);
+        }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -42,9 +51,18 @@ public class AnalyticsController(IAnalyticsService service) : ControllerBase
     public async Task<ActionResult<HallAvailabilityDto>> CheckHallAvailability(
         int hallId)
     {
-        var result = await service.CheckHallAvailabilityAsync(hallId);
+        try
+        {
+            var result = await service.CheckHallAvailabilityAsync(hallId);
 
-        return result is null ? NotFound() : Ok(result);
+            return result is null ? NotFound() : Ok(result);
+        }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -57,10 +75,19 @@ public class AnalyticsController(IAnalyticsService service) : ControllerBase
     public async Task<ActionResult<IReadOnlyCollection<ClientDto>>>
         GetExpiredSubscriptions()
     {
-        var clients =
-            await service.GetClientsWithExpiredSubscriptionsAsync();
+        try
+        {
+            var clients =
+                await service.GetClientsWithExpiredSubscriptionsAsync();
 
-        return Ok(clients);
+            return Ok(clients);
+        }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -68,16 +95,26 @@ public class AnalyticsController(IAnalyticsService service) : ControllerBase
     /// </summary>
     /// <param name="hallId">ID зала.</param>
     [HttpGet("halls/{hallId:int}/current-month-trainings")]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(
         typeof(IReadOnlyCollection<TrainingDto>),
         StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyCollection<TrainingDto>>>
         GetCurrentMonthTrainings(int hallId)
     {
-        var trainings =
-            await service.GetCurrentMonthTrainingsByHallAsync(hallId);
+        try
+        {
+            var trainings =
+                await service.GetCurrentMonthTrainingsByHallAsync(hallId);
 
-        return Ok(trainings);
+            return trainings is null ? NotFound() : Ok(trainings);
+        }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -90,8 +127,17 @@ public class AnalyticsController(IAnalyticsService service) : ControllerBase
     public async Task<ActionResult<IReadOnlyCollection<TrainerDto>>>
         GetTopTrainers()
     {
-        var trainers = await service.GetTopFiveTrainersAsync();
+        try
+        {
+            var trainers = await service.GetTopFiveTrainersAsync();
 
-        return Ok(trainers);
+            return Ok(trainers);
+        }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 }

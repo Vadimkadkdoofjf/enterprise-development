@@ -12,7 +12,6 @@ namespace FitnessClub.Api.Controllers;
 [ApiController]
 [Route("api/trainers")]
 [Produces("application/json")]
-[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
 public class TrainersController(
     ITrainerService trainerService,
@@ -25,9 +24,18 @@ public class TrainersController(
     [ProducesResponseType(typeof(IReadOnlyCollection<TrainerDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyCollection<TrainerDto>>> GetAllAsync()
     {
-        var trainers = await trainerService.GetAllAsync();
+        try
+        {
+            var trainers = await trainerService.GetAllAsync();
 
-        return Ok(trainers);
+            return Ok(trainers);
+        }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -39,14 +47,23 @@ public class TrainersController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TrainerDto>> GetById(int id)
     {
-        var trainer = await trainerService.GetByIdAsync(id);
-
-        if (trainer is null)
+        try
         {
-            return NotFound();
-        }
+            var trainer = await trainerService.GetByIdAsync(id);
 
-        return Ok(trainer);
+            if (trainer is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(trainer);
+        }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -54,6 +71,7 @@ public class TrainersController(
     /// </summary>
     /// <param name="dto">Данные нового тренера.</param>
     [HttpPost]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(TrainerDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<TrainerDto>> CreateAsync(
@@ -78,6 +96,12 @@ public class TrainersController(
 
             return BadRequest(new { message = exception.Message });
         }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -86,6 +110,7 @@ public class TrainersController(
     /// <param name="id">ID тренера.</param>
     /// <param name="dto">Новые данные тренера.</param>
     [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -117,6 +142,12 @@ public class TrainersController(
 
             return BadRequest(new { message = exception.Message });
         }
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 
     /// <summary>
@@ -124,21 +155,31 @@ public class TrainersController(
     /// </summary>
     /// <param name="id">ID тренера.</param>
     [HttpDelete("{id:int}")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(int id)
     {
-        var deleted = await trainerService.DeleteAsync(id);
-
-        if (!deleted)
+        try
         {
-            return NotFound();
+            var deleted = await trainerService.DeleteAsync(id);
+
+            if (!deleted)
+            {
+                return NotFound();
+            }
+
+            logger.LogInformation(
+                "Удалён тренер с ID {TrainerId}.",
+                id);
+
+            return NoContent();
         }
-
-        logger.LogInformation(
-            "Удалён тренер с ID {TrainerId}.",
-            id);
-
-        return NoContent();
+        catch (Exception exception) when (!DatabaseExceptionHandler.IsDatabaseException(exception))
+        {
+            logger.LogError(exception, "Ошибка при выполнении {Method} {Path}.", Request.Method, Request.Path);
+            return Problem(statusCode: StatusCodes.Status500InternalServerError,
+                title: "Не удалось выполнить запрос.");
+        }
     }
 }
